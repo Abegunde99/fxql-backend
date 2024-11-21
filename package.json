@@ -21,8 +21,9 @@
     "migration:revert": "npm run typeorm -- migration:revert",
     "db:migrate": "node dist/scripts/run-migrations.js",
     "postbuild": "tsc -p tsconfig.scripts.json",
-    "start:prod": "node dist/scripts/run-migrations.js && node dist/main.js",
-    "prestart:prod": "npm run migration:run"
+    "prestart:prod": "npm run migration:run",
+    "start:prod": "node dist/main.js",
+    "check:env": "ts-node src/scripts/check-env.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.1.2",

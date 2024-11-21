@@ -1,10 +1,12 @@
 /* eslint-disable prettier/prettier */
 import { DataSource } from 'typeorm';
-import { config } from 'dotenv';
 import { FxqlEntry } from '../fxql/entities/fxql-entry.entity';
 import { CreateFxqlEntries1700000000000 } from '../migrations/1700000000000-CreateFxqlEntries';
 
-config();
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is not defined in environment');
+  process.exit(1);
+}
 
 const dataSource = new DataSource({
   type: 'postgres',
@@ -14,14 +16,13 @@ const dataSource = new DataSource({
   ssl: {
     rejectUnauthorized: false
   },
-  // Add connection timeout
   connectTimeoutMS: 10000,
-  // Increase pool size
   poolSize: 5,
 });
 
 async function runMigrations() {
   try {
+    console.log('Database URL exists:', !!process.env.DATABASE_URL);
     console.log('Initializing database connection...');
     await dataSource.initialize();
     
