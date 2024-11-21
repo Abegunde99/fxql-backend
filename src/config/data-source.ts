@@ -2,27 +2,23 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
 import { FxqlEntry } from '../fxql/entities/fxql-entry.entity';
-import { CreateFxqlEntries1700000000000 } from '../migrations/1700000000000-CreateFxqlEntries';
+import * as path from 'path';
 
-config();
+// Load the appropriate .env file
+config({ path: path.join(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`) });
 
 if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not defined in environment variables');
+  throw new Error('DATABASE_URL is not defined');
 }
 
-export const dataSourceOptions: DataSourceOptions = {
+const options: DataSourceOptions = {
   type: 'postgres',
   url: process.env.DATABASE_URL,
   entities: [FxqlEntry],
-  migrations: [CreateFxqlEntries1700000000000],
-  ssl: {
-    rejectUnauthorized: false
-  },
+  migrations: ['src/migrations/*.ts'],
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   synchronize: false,
-  logging: true,
-  migrationsRun: false, // Set this to false explicitly
-  migrationsTableName: 'typeorm_migrations', // Explicit migrations table name
+  logging: process.env.NODE_ENV !== 'production',
 };
 
-const dataSource = new DataSource(dataSourceOptions);
-export default dataSource;
+export default new DataSource(options);

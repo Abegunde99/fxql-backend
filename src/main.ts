@@ -2,36 +2,51 @@
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import * as rateLimit from 'express-rate-limit';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
-  // Security middleware
+  const configService = app.get(ConfigService);
+
+  // Security
   app.use(helmet());
-  app.use(
-    rateLimit.default({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // limit each IP to 100 requests per windowMs
+
+  // CORS
+  if (configService.get('app.cors.enabled')) {
+    app.enableCors({
+      origin: configService.get('app.cors.origin'),
+    });
+  }
+
+  // Global Validation Pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
   );
-  
-  // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  
-  // Swagger setup
+
+  // Swagger Documentation
   const config = new DocumentBuilder()
     .setTitle('FXQL Parser API')
-    .setDescription('API for parsing Foreign Exchange Query Language statements')
+    .setDescription('Foreign Exchange Query Language Parser API')
     .setVersion('1.0')
     .addTag('FXQL')
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  
-  await app.listen(process.env.PORT || 3000);
+
+  // Start server
+  const port = configService.get('app.port');
+  await app.listen(port);
+
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger documentation: http://localhost:${port}/api`);
 }
+
 bootstrap();
