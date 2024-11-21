@@ -2,11 +2,21 @@ services:
   - type: web
     name: fxql-backend
     env: node
-    buildCommand: |
-      npm install
-      npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /health
+    # Add build optimization
+    buildFilter:
+      paths:
+        - src/**/*.ts
+        - package.json
+        - package-lock.json
+        - tsconfig.json
+    # Add automatic scaling
+    autoscaling:
+      enabled: true
+      minInstances: 1
+      maxInstances: 1
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,9 +30,9 @@ services:
         value: "*"
       - key: DATABASE_URL
         fromDatabase:
-          name: fxql-db
+          name: fxql-backend
           property: connectionString
-
-databases:
-  - name: fxql-backend
-    plan: starter
+    # Add resource allocation
+    resourceAllocation:
+      cpu: 1x
+      memory: 512MB

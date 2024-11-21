@@ -14,18 +14,28 @@ const dataSource = new DataSource({
   ssl: {
     rejectUnauthorized: false
   },
+  // Add connection timeout
+  connectTimeoutMS: 10000,
+  // Increase pool size
+  poolSize: 5,
 });
 
 async function runMigrations() {
   try {
+    console.log('Initializing database connection...');
     await dataSource.initialize();
+    
     console.log('Running migrations...');
-    await dataSource.runMigrations();
-    console.log('Migrations completed successfully');
+    const migrations = await dataSource.runMigrations({ transaction: 'each' });
+    console.log('Migrations completed:', migrations.length, 'migrations executed');
+    
     await dataSource.destroy();
+    console.log('Database connection closed');
   } catch (error) {
-    console.error('Error running migrations:', error);
-    await dataSource.destroy();
+    console.error('Migration error:', error);
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
     process.exit(1);
   }
 }
