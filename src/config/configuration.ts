@@ -11,6 +11,6 @@ export const appConfig = registerAs('app', () => ({
   },
   rateLimit: {
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000
   }
 }));

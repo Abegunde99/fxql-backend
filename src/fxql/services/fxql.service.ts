@@ -13,6 +13,33 @@ export class FxqlService {
     private readonly parserService: FxqlParserService,
   ) {}
 
+  getWelcomeMessage(baseUrl: string) {
+    return {
+      name: 'FXQL Backend API',
+      version: '1.0.0',
+      description: 'Foreign Exchange Query Language (FXQL) Parser API - A robust service for parsing and managing foreign exchange rate information.',
+      endpoints: {
+        documentation: `${baseUrl}/api`,
+        fxql: `${baseUrl}/fxql-statements`,
+        health: `${baseUrl}/health`
+      },
+      features: [
+        'FXQL Statement Parsing and Validation',
+        'Real-time Currency Rate Management',
+        'Automatic Data Validation',
+        'Database Integration with PostgreSQL',
+        'Health Monitoring',
+        'Comprehensive API Documentation'
+      ],
+      status: 'operational',
+      environment: process.env.NODE_ENV,
+      documentation: {
+        swagger: `${baseUrl}/api`,
+        description: 'Full API documentation available via Swagger UI'
+      }
+    };
+  }
+
   async processStatement(fxqlStatement: string) {
     const parsedEntries = this.parserService.parse(fxqlStatement);
     const savedEntries: FxqlEntry[] = [];
