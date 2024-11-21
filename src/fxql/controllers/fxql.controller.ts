@@ -3,6 +3,8 @@ import { Controller, Post, Body, UsePipes, ValidationPipe, Get } from '@nestjs/c
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FxqlService } from '../services/fxql.service';
 import { FxqlStatementDto } from '../dto/fxql-statement.dto';
+import { config } from 'dotenv';
+config();
 
 @ApiTags('FXQL')
 @Controller()
