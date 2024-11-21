@@ -2,9 +2,9 @@ services:
   - type: web
     name: fxql-backend
     env: node
-    region: ohio  # or your preferred region
-    plan: starter
-    buildCommand: npm ci && npm run build
+    buildCommand: |
+      npm install
+      npm run build
     startCommand: npm run start:prod
     healthCheckPath: /health
     envVars:
@@ -17,7 +17,7 @@ services:
       - key: CORS_ENABLED
         value: true
       - key: CORS_ORIGIN
-        value: "*"  # Update this with your frontend domain
+        value: "*"
       - key: DATABASE_URL
         fromDatabase:
           name: fxql-db
@@ -25,5 +25,4 @@ services:
 
 databases:
   - name: fxql-backend
-    region: ohio  # or your preferred region
     plan: starter
