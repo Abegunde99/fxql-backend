@@ -8,49 +8,65 @@ import * as compression from 'compression';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  // Enable garbage collection
-  if (process.env.NODE_ENV === 'production') {
-    global.gc?.();
-  }
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn'], // Reduce logging in production
-    cors: true,
-    bufferLogs: true,
-  });
-
-  // Security
-  app.use(helmet());
+  // Security middleware
+  app.use(helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+  }));
   
   // Compression
   app.use(compression());
+
+  // CORS configuration
+  app.enableCors({
+    origin: configService.get('app.cors.origin'),
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   // Validation
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
     forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
   }));
 
-  // Swagger with caching
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('FXQL Parser API')
-      .setDescription('Foreign Exchange Query Language Parser')
-      .setVersion('1.0')
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
-  }
+  // Swagger Configuration
+  const config = new DocumentBuilder()
+    .setTitle('FXQL Backend API')
+    .setDescription('Foreign Exchange Query Language Parser API Documentation')
+    .setVersion('1.0')
+    .addServer(process.env.NODE_ENV === 'production' 
+      ? 'https://fxql-backend-spmc.onrender.com' // Replace with your Render URL
+      : 'http://localhost:' + configService.get('app.port'))
+    .addBearerAuth()
+    .addTag('FXQL')
+    .build();
 
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port', 3000);
+  const document = SwaggerModule.createDocument(app, config);
   
+  SwaggerModule.setup('api', app, document, {
+    customSiteTitle: 'FXQL API Documentation',
+    customfavIcon: 'https://example.com/favicon.ico',
+    customCss: '.swagger-ui .topbar { display: none }',
+    swaggerOptions: {
+      persistAuthorization: true,
+      filter: true,
+      displayRequestDuration: true,
+      tryItOutEnabled: true,
+      docExpansion: 'list',
+      operationsSorter: 'alpha',
+      tagsSorter: 'alpha',
+    },
+  });
+
+  const port = configService.get<number>('app.port', 3000);
   await app.listen(port);
+  
   console.log(`Application running on port ${port}`);
+  console.log(`Swagger documentation available at ${await app.getUrl()}/api`);
 }
 
 bootstrap();
